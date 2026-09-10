@@ -61,7 +61,7 @@ export default function App() {
     <div className="app-container">
       <header className="app-header">
         <h1 className="main-title">Emoji Finder</h1>
-        <p className="subtitle">Find emoji by keywords</p>
+        <p style={{ fontSize: '16px', margin: 0, opacity: 0.8 }}>Find emoji by keywords</p>
       </header>
 
       <div className="content-wrapper">
@@ -76,11 +76,11 @@ export default function App() {
         </div>
 
         <main className="emoji-grid">
-          {filteredEmojis.map((emoji, index) => (
+          {filteredEmojis.map((emoji) => (
             <EmojiCard 
               key={emoji.id} 
               emoji={emoji} 
-              isActive={index === 2} 
+              isActive={false} 
             />
           ))}
         </main>
