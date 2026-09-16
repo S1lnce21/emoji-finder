@@ -1,89 +1,58 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
-
-interface EmojiItem {
-  id: string;
-  symbol: string;
-  title: string;
-  keywords: string;
-}
-
-const initialEmojis: EmojiItem[] = [
-  {
-    id: '1',
-    symbol: '💯',
-    title: '100',
-    keywords: 'Hundred, points, symbol, wow, win, perfect, parties',
-  },
-  {
-    id: '2',
-    symbol: '🔢',
-    title: '1234',
-    keywords: 'input symbol for numbers symbol',
-  },
-  {
-    id: '3',
-    symbol: '🔢',
-    title: '1234',
-    keywords: 'input symbol for numbers symbol',
-  },
-];
-
-interface EmojiCardProps {
-  emoji: EmojiItem;
-  isActive?: boolean;
-}
-
-const EmojiCard: React.FC<EmojiCardProps> = ({ emoji, isActive = false }) => {
-  return (
-    <div className={`emoji-card ${isActive ? 'active' : ''}`}>
-      <div className="emoji-symbol">{emoji.symbol}</div>
-      <h3 className="emoji-title">{emoji.title}</h3>
-      <p className="emoji-keywords">{emoji.keywords}</p>
-    </div>
-  );
-};
+import { getEmojis, type IEmojiItem } from './api/emojiApi';
+import { Header } from './components/Header';
+import { SearchInput } from './components/SearchInput';
+import { EmojiGrid } from './components/EmojiGrid';
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [emojis, setEmojis] = useState<IEmojiItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredEmojis = useMemo(() => {
-    return initialEmojis.filter((emoji) => {
-      const query = searchQuery.toLowerCase();
-      return (
-        emoji.title.toLowerCase().includes(query) ||
-        emoji.keywords.toLowerCase().includes(query)
-      );
-    });
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getEmojis(searchQuery);
+        setEmojis(data);
+      } catch {
+        setError('Не удалось загрузить данные. Проверьте, запущен ли сервер (start.bat).');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [searchQuery]);
 
   return (
     <div className="app-container">
-      <header className="app-header">
-        <h1 className="main-title">Emoji Finder</h1>
-        <p style={{ fontSize: '16px', margin: 0, opacity: 0.8 }}>Find emoji by keywords</p>
-      </header>
+      <Header />
 
       <div className="content-wrapper">
-        <div className="search-container">
-          <input
-            type="text"
-            placeholder="Placeholder"
-            value={searchQuery}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-            className="search-input"
-          />
-        </div>
+        <SearchInput 
+          value={searchQuery} 
+          onChange={setSearchQuery} 
+        />
 
-        <main className="emoji-grid">
-          {filteredEmojis.map((emoji) => (
-            <EmojiCard 
-              key={emoji.id} 
-              emoji={emoji} 
-              isActive={false} 
-            />
-          ))}
-        </main>
+        {error && (
+          <div style={{ padding: '20px', color: '#ff4d4f', fontWeight: 'bold', textAlign: 'center' }}>
+            {error}
+          </div>
+        )}
+
+        {loading && (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#135d70', fontWeight: '500' }}>
+            Загрузка списка эмодзи...
+          </div>
+        )}
+
+        {!loading && !error && (
+          <EmojiGrid emojis={emojis} />
+        )}
       </div>
     </div>
   );
